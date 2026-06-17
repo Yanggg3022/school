@@ -2,15 +2,86 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My School Project</title>
+    <style>
+        /* 1. 整体页面的背景和字体设置 */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f4f7f6; /* 舒服的浅灰色背景 */
+            color: #333333;           /* 深灰色文字，比纯黑色更柔和 */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;      /* 整体内容水平居中 */
+            justify-content: center;  /* 整体内容垂直居中 */
+            min-height: 100vh;        /* 让内容占满整个屏幕高度 */
+        }
+
+        /* 2. 主标题设计 */
+        h1 {
+            color: #2c3e50;           /* 深蓝灰色，显稳重 */
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        /* 3. 副标题/提示文字设计 */
+        p {
+            color: #7f8c8d;           /* 优雅的灰色 */
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        /* 4. 列表容器设置（去掉默认的列表圆点） */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            max-width: 400px;         /* 限制最大宽度，在手机和电脑上都好看 */
+        }
+
+        /* 5. 列表单项的外边距 */
+        li {
+            margin-bottom: 15px;
+        }
+
+        /* 6. 将超链接（a标签）变成好看的“按钮卡片” */
+        ul li a {
+            display: block;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #ffffff; /* 按钮背景为纯白 */
+            color: #3498db;           /* 字体颜色为明亮的蓝色 */
+            text-decoration: none;     /* 去掉链接自带的下划线 */
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;        /* 圆角设计 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* 淡淡的阴影，打造悬浮感 */
+            transition: all 0.3s ease; /* 让动画过渡更平滑 */
+            border: 1px solid #e2e8f0;
+        }
+
+        /* 7. 鼠标悬浮在按钮上时的变色动画效果（Hover Effect） */
+        ul li a:hover {
+            background-color: #3498db; /* 背景变成蓝色 */
+            color: #ffffff;           /* 文字变成白色 */
+            transform: translateY(-3px); /* 按钮微微向上浮动 3 像素 */
+            box-shadow: 0 8px 12px rgba(52, 152, 219, 0.2); /* 阴影加深 */
+        }
+    </style>
 </head>
 <body>
+
     <h1>学校の課題サイトへようこそ</h1>
     <p>見たいページを選択してください：</p>
 
     <ul>
-        <li><a href="jump_game.html">ジャンプゲーム（Jump Game）を遊ぶ</a></li>
-        <li><a href="lookcast.html">Lookcast ページを見る</a></li>
+        <li><a href="jump_game.html">🎮 ジャンプゲームを遊ぶ</a></li>
+        <li><a href="lookcast.html">📄 Lookcast ページを見る</a></li>
     </ul>
+
 </body>
 </html>
