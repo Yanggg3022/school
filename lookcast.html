@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOOKCAST — Weather × Style</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #fafafa;
+    --gray-1: #f5f5f5;
+    --gray-2: #e8e8e8;
+    --gray-3: #aaa;
+    --gray-4: #666;
+    --accent-f: #c9a0dc;
+    --accent-m: #7ec8c8;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.35;
+  }
+
+  /* ── DESKTOP LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid #1f1f1f;
+    padding: 40px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--white);
+    line-height: 1;
+  }
+  .logo span { color: var(--gray-3); font-size: 11px; font-family: var(--font-body); display: block; margin-top: 4px; letter-spacing: 2px; font-weight: 300; text-transform: uppercase; }
+
+  /* city search */
+  .city-search { display: flex; align-items: center; gap: 10px; background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 10px 14px; }
+  .city-search i { color: var(--gray-3); font-size: 16px; }
+  .city-search input { background: none; border: none; outline: none; color: var(--white); font-family: var(--font-body); font-size: 14px; flex: 1; }
+  .city-search input::placeholder { color: var(--gray-4); }
+
+  /* weather widget */
+  .weather-card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 20px;
+    padding: 22px;
+  }
+  .weather-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .weather-top .city-name { font-size: 15px; font-weight: 500; color: var(--white); }
+  .weather-top .date-str { font-size: 11px; color: var(--gray-3); margin-top: 2px; font-weight: 300; }
+  .big-temp { font-family: var(--font-display); font-size: 52px; color: var(--white); line-height: 1; }
+  .weather-desc { font-size: 12px; color: var(--gray-3); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .weather-stats { display: flex; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #222; }
+  .wstat { font-size: 11px; color: var(--gray-3); display: flex; align-items: center; gap: 4px; }
+  .wstat i { font-size: 13px; }
+
+  /* forecast row */
+  .forecast-row { display: flex; gap: 6px; }
+  .fc-day {
+    flex: 1; background: #111; border: 1px solid #1e1e1e; border-radius: 12px;
+    padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .fc-day:hover { border-color: #333; }
+  .fc-day.active { background: var(--white); border-color: var(--white); }
+  .fc-day .fd-icon { font-size: 20px; }
+  .fc-day .fd-name { font-size: 10px; color: var(--gray-3); margin-top: 3px; font-weight: 300; }
+  .fc-day.active .fd-name { color: var(--gray-4); }
+  .fc-day .fd-temp { font-size: 12px; font-weight: 500; color: var(--white); margin-top: 2px; }
+  .fc-day.active .fd-temp { color: var(--black); }
+
+  /* gender toggle */
+  .gender-toggle { display: flex; background: #111; border: 1px solid #222; border-radius: 12px; padding: 4px; gap: 4px; }
+  .gtab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 400; color: var(--gray-3); cursor: pointer; border-radius: 8px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .gtab.active-f { background: var(--accent-f); color: #1a0a2e; font-weight: 500; }
+  .gtab.active-m { background: var(--accent-m); color: #041c1c; font-weight: 500; }
+
+  /* nav links */
+  .sidebar-nav { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--gray-3); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .nav-link:hover, .nav-link.active { background: #161616; color: var(--white); }
+  .nav-link i { font-size: 18px; }
+
+  /* ── MAIN FEED ── */
+  .main { padding: 0; }
+
+  /* topbar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 28px 32px 0; }
+  .topbar-title { font-family: var(--font-display); font-size: 22px; color: var(--white); }
+  .topbar-actions { display: flex; gap: 16px; color: var(--gray-3); }
+  .topbar-actions i { font-size: 22px; cursor: pointer; transition: color 0.15s; }
+  .topbar-actions i:hover { color: var(--white); }
+
+  /* stories */
+  .stories-wrap { display: flex; gap: 14px; padding: 20px 32px; overflow-x: auto; scrollbar-width: none; }
+  .stories-wrap::-webkit-scrollbar { display: none; }
+  .story { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 auto; cursor: pointer; }
+  .story-ring {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: conic-gradient(#c9a0dc, #e26daa, #f0a070, #e8d86e, #c9a0dc);
+    padding: 2.5px; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+  }
+  .story-ring:hover { transform: scale(1.05); }
+  .story-ring.male { background: conic-gradient(#7ec8c8, #4a9db5, #3d7bb5, #7ec8c8); }
+  .story-inner { width: 53px; height: 53px; border-radius: 50%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .story-label { font-size: 10px; color: var(--gray-3); max-width: 64px; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  /* feed grid */
+  .feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #111; margin-top: 4px; }
+
+  /* post card */
+  .post-card { background: #0d0d0d; padding: 0; overflow: hidden; animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .post-card:nth-child(2) { animation-delay: 0.06s; }
+  .post-card:nth-child(3) { animation-delay: 0.12s; }
+  .post-card:nth-child(4) { animation-delay: 0.18s; }
+
+  .pc-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .pc-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1f1f; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex: 0 0 auto; }
+  .pc-user { font-size: 12px; font-weight: 500; color: var(--white); }
+  .pc-loc { font-size: 10px; color: var(--gray-3); margin-top: 1px; }
+  .pc-more { margin-left: auto; color: var(--gray-3); font-size: 16px; cursor: pointer; }
+
+  .pc-image {
+    width: 100%; aspect-ratio: 1/1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; font-size: 72px;
+    transition: transform 0.3s;
+  }
+  .pc-image:hover { transform: scale(1.02); }
+  .pc-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.7); color: var(--white);
+    font-size: 10px; padding: 3px 9px; border-radius: 20px;
+    display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px);
+  }
+  .pc-temp-label {
+    position: absolute; bottom: 10px; left: 12px;
+    font-family: var(--font-display); font-size: 26px; color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+
+  .pc-actions { display: flex; align-items: center; gap: 14px; padding: 10px 14px 6px; }
+  .pc-actions i { font-size: 20px; color: var(--white); cursor: pointer; transition: transform 0.15s; }
+  .pc-actions i:hover { transform: scale(1.15); }
+  .pc-save { margin-left: auto; }
+  .pc-likes { padding: 0 14px 4px; font-size: 12px; font-weight: 500; color: var(--white); }
+  .pc-caption { padding: 0 14px 6px; font-size: 12px; color: #ccc; line-height: 1.5; }
+  .pc-caption strong { color: var(--white); }
+  .pc-tags { padding: 0 14px 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .ptag { font-size: 10px; padding: 2px 7px; border-radius: 8px; }
+  .ptag-f { background: rgba(201,160,220,0.15); color: var(--accent-f); }
+  .ptag-m { background: rgba(126,200,200,0.15); color: var(--accent-m); }
+  .pc-comment { padding: 0 14px 12px; font-size: 11px; color: var(--gray-4); font-style: italic; }
+
+  /* ── MOBILE NAV ── */
+  .mobile-nav { display: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid #1f1f1f; padding: 20px 16px; gap: 16px; }
+    .sidebar-nav { display: none; }
+    .forecast-row { gap: 4px; }
+    .stories-wrap { padding: 16px; }
+    .topbar { padding: 16px 16px 0; }
+    .feed-grid { gap: 1px; }
+    .main { padding-bottom: 70px; }
+    .mobile-nav {
+      display: flex; justify-content: space-around;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,10,0.96); border-top: 1px solid #1f1f1f;
+      padding: 10px 0 18px; z-index: 999; backdrop-filter: blur(10px);
+    }
+    .mn-item { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 9px; gap: 3px; cursor: pointer; }
+    .mn-item.active { color: var(--white); }
+    .mn-item i { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div>
+      <div class="logo">Lookcast<span>Weather × Style</span></div>
+    </div>
+
+    <div class="city-search">
+      <i class="ti ti-map-pin" aria-hidden="true"></i>
+      <input type="text" id="cityInput" placeholder="Search city..." />
+      <i class="ti ti-search" style="cursor:pointer" onclick="handleSearch()" aria-label="Search"></i>
+    </div>
+
+    <div class="weather-card" id="weatherCard">
+      <div class="weather-top">
+        <div>
+          <div class="city-name" id="cityName">Tokyo, JP</div>
+          <div class="date-str" id="dateStr">Wednesday, June 3</div>
+        </div>
+        <div style="text-align:right">
+          <div class="big-temp" id="bigTemp">28°</div>
+          <div class="weather-desc" id="weatherDesc">Sunny</div>
+        </div>
+      </div>
+      <div class="weather-stats">
+        <div class="wstat"><i class="ti ti-droplet" aria-hidden="true"></i> 40%</div>
+        <div class="wstat"><i class="ti ti-wind" aria-hidden="true"></i> 12 km/h</div>
+        <div class="wstat"><i class="ti ti-sun" aria-hidden="true"></i> UV 6</div>
+      </div>
+    </div>
+
+    <div class="forecast-row" id="forecastRow">
+      <div class="fc-day active" onclick="setDay(0,this)"><div class="fd-icon">☀️</div><div class="fd-name">Wed</div><div class="fd-temp">28°</div></div>
+      <div class="fc-day" onclick="setDay(1,this)"><div class="fd-icon">⛅</div><div class="fd-name">Thu</div><div class="fd-temp">24°</div></div>
+      <div class="fc-day" onclick="setDay(2,this)"><div class="fd-icon">🌧️</div><div class="fd-name">Fri</div><div class="fd-temp">19°</div></div>
+      <div class="fc-day" onclick="setDay(3,this)"><div class="fd-icon">⛈️</div><div class="fd-name">Sat</div><div class="fd-temp">17°</div></div>
+      <div class="fc-day" onclick="setDay(4,this)"><div class="fd-icon">🌤️</div><div class="fd-name">Sun</div><div class="fd-temp">22°</div></div>
+    </div>
+
+    <div class="gender-toggle">
+      <div class="gtab active-f" id="tab-f" onclick="switchGender('f')">♀ Women</div>
+      <div class="gtab" id="tab-m" onclick="switchGender('m')">♂ Men</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-link active"><i class="ti ti-home" aria-hidden="true"></i> Home</div>
+      <div class="nav-link"><i class="ti ti-heart" aria-hidden="true"></i> Saved looks</div>
+      <div class="nav-link"><i class="ti ti-calendar" aria-hidden="true"></i> Weekly plan</div>
+      <div class="nav-link"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="feedTitle">Today's looks</div>
+      <div class="topbar-actions">
+        <i class="ti ti-heart" aria-hidden="true"></i>
+        <i class="ti ti-bell" aria-hidden="true"></i>
+        <i class="ti ti-send" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="stories-wrap" id="storiesRow">
+      <div class="story"><div class="story-ring"><div class="story-inner">☀️</div></div><div class="story-label">Sunny</div></div>
+      <div class="story"><div class="story-ring"><div class="story-inner">⛅</div></div><div class="story-label">Cloudy</div></div>
+      <div class="story"><div class="story-ring"><div class="story-inner">🌧️</div></div><div class="story-label">Rainy</div></div>
+      <div class="story"><div class="story-ring"><div class="story-inner">⛈️</div></div><div class="story-label">Storm</div></div>
+      <div class="story"><div class="story-ring"><div class="story-inner">🌤️</div></div><div class="story-label">Part sun</div></div>
+    </div>
+
+    <div class="feed-grid" id="feedGrid"></div>
+  </main>
+</div>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav" aria-label="Bottom navigation">
+  <div class="mn-item active"><i class="ti ti-home" aria-hidden="true"></i>Home</div>
+  <div class="mn-item"><i class="ti ti-search" aria-hidden="true"></i>Explore</div>
+  <div class="mn-item"><i class="ti ti-plus" aria-hidden="true"></i>Add</div>
+  <div class="mn-item"><i class="ti ti-heart" aria-hidden="true"></i>Saved</div>
+  <div class="mn-item"><i class="ti ti-user-circle" aria-hidden="true"></i>Profile</div>
+</nav>
+
+<script>
+const DAYS_META = [
+  {icon:"☀️",temp:"28°",label:"Sunny",name:"Wed",humidity:"40%",wind:"12 km/h",uv:"UV 6"},
+  {icon:"⛅",temp:"24°",label:"Cloudy",name:"Thu",humidity:"55%",wind:"9 km/h",uv:"UV 3"},
+  {icon:"🌧️",temp:"19°",label:"Rainy",name:"Fri",humidity:"80%",wind:"18 km/h",uv:"UV 1"},
+  {icon:"⛈️",temp:"17°",label:"Storm",name:"Sat",humidity:"90%",wind:"30 km/h",uv:"UV 0"},
+  {icon:"🌤️",temp:"22°",label:"Partly sunny",name:"Sun",humidity:"50%",wind:"10 km/h",uv:"UV 4"},
+];
+
+const POSTS = {
+  0:{
+    f:[
+      {avatar:"S",user:"sunny.style",loc:"Shibuya, Tokyo",bg:"#1a1008",mainIcon:"🧥",outfit:"Linen mini dress + slides",desc:"Breezy linen is the move today. Light neutrals or soft pastels — the heat calls for air.",tags:["#summerlook","#linendress","#28degrees"],likes:"3,241",comment:"obsessed with this vibe 🔥"},
+      {avatar:"M",user:"mika.fits",loc:"Harajuku",bg:"#1a0a14",mainIcon:"👒",outfit:"Crop top + wide-leg trousers",desc:"High-waist wide leg balances a fitted crop perfectly. Bucket hat for UV protection.",tags:["#streetstyle","#harajukufashion","#ootd"],likes:"2,108",comment:"need this whole fit asap"}
+    ],
+    m:[
+      {avatar:"K",user:"kota.wear",loc:"Daikanyama",bg:"#080f0d",mainIcon:"👔",outfit:"Linen shirt + chino shorts",desc:"Loose linen shirt half-tucked into tailored chino shorts. Monochrome for a clean editorial look.",tags:["#mensstyle","#linenshirt","#summermen"],likes:"1,874",comment:"clean as always bro"},
+      {avatar:"R",user:"ren.minimal",loc:"Ginza",bg:"#0a0c10",mainIcon:"👟",outfit:"Oversized tee + wide shorts",desc:"Oversized neutral tee, wide shorts, chunky sneakers. Less is more on a hot day.",tags:["#minimalmen","#streetwear","#tokyofit"],likes:"2,560",comment:"that sneaker pick tho"}
+    ]
+  },
+  1:{
+    f:[
+      {avatar:"A",user:"aoi.looks",loc:"Nakameguro",bg:"#0e0a18",mainIcon:"🧣",outfit:"Knit cardigan + slip skirt",desc:"Silky slip skirt with a soft-knit cardigan. Moody and effortless — perfect cloudy-day energy.",tags:["#cloudyday","#knit","#slipskirt"],likes:"4,012",comment:"so cozy chic ✨"},
+      {avatar:"Y",user:"yuki.archive",loc:"Shimokitazawa",bg:"#100e08",mainIcon:"👗",outfit:"Denim jacket + midi dress",desc:"Layer a denim jacket over a flowy midi dress. Timeless combo that works every time.",tags:["#denimjacket","#layering","#vintagestyle"],likes:"1,993",comment:"midi dress era for sure"}
+    ],
+    m:[
+      {avatar:"D",user:"dai.wardrobe",loc:"Shimokitazawa",bg:"#0a0a18",mainIcon:"🧥",outfit:"Coach jacket + straight denim",desc:"Classic coach jacket over a simple tee with straight-cut jeans. Effortless and versatile.",tags:["#coachjacket","#mensdenim","#casualfit"],likes:"2,231",comment:"coach jacket never misses"},
+      {avatar:"T",user:"taku.fits",loc:"Harajuku",bg:"#080f08",mainIcon:"👔",outfit:"Oxford shirt + chinos",desc:"Relaxed oxford shirt untucked with slim chinos and clean white sneakers. Smart casual done right.",tags:["#oxfordshirt","#smartcasual","#cleanfit"],likes:"1,647",comment:"this is so clean"}
+    ]
+  },
+  2:{
+    f:[
+      {avatar:"N",user:"nana.rainy",loc:"Ebisu",bg:"#080c14",mainIcon:"🌂",outfit:"Trench coat + ankle boots",desc:"A beige trench is the ultimate rainy-day power move. Ankle boots and a structured tote.",tags:["#trenchcoat","#rainyday","#chic"],likes:"5,109",comment:"rain is just an excuse to wear trench"},
+      {avatar:"H",user:"haru.edit",loc:"Omotesando",bg:"#140810",mainIcon:"🧥",outfit:"Puffer vest + straight jeans",desc:"Pop a colourful puffer vest over a fitted long-sleeve. Keeps you dry, makes a statement.",tags:["#puffervest","#rainlook","#colourpop"],likes:"2,784",comment:"the vest colour omg 💜"}
+    ],
+    m:[
+      {avatar:"S",user:"sho.rain",loc:"Shibuya",bg:"#081410",mainIcon:"🌂",outfit:"Waterproof parka + cargo pants",desc:"Sleek waterproof parka over cargo pants. Functional and still very much on trend.",tags:["#parka","#cargopants","#rainwear"],likes:"3,002",comment:"cargo pants rain fit is underrated"},
+      {avatar:"J",user:"jun.mode",loc:"Roppongi",bg:"#100c14",mainIcon:"👢",outfit:"Dark overcoat + chelsea boots",desc:"Charcoal overcoat over a dark knit with chelsea boots. Rainy days = moody fits.",tags:["#overcoat","#chelseaboots","#darkstyle"],likes:"2,419",comment:"dark fits on rainy days hit different"}
+    ]
+  },
+  3:{
+    f:[
+      {avatar:"R",user:"risa.cozy",loc:"Home",bg:"#140a06",mainIcon:"🧸",outfit:"Oversized hoodie + lounge set",desc:"Storm days are for cozy loungewear. Oversized hoodie, matching wide-leg pants — stay in, look good.",tags:["#cozyday","#loungewear","#stormfit"],likes:"6,221",comment:"staying in looking this cute 🥹"},
+      {avatar:"C",user:"chika.stay",loc:"Aoyama",bg:"#0e0a18",mainIcon:"🧶",outfit:"Cable knit + wide crop trousers",desc:"Cable knit tucked into wide crop trousers with a chunky boot. Storm-proof and stylish.",tags:["#cableknit","#stormproof","#chunkylook"],likes:"3,350",comment:"chunky boot era"}
+    ],
+    m:[
+      {avatar:"G",user:"go.indoor",loc:"Home",bg:"#081410",mainIcon:"🧸",outfit:"Matching sweatset + slip-ons",desc:"Matching sweatset in a muted tone. Storm outside, soft-launch level comfort inside.",tags:["#sweatset","#menlounge","#stormday"],likes:"2,100",comment:"matching sweatset is lowkey elite"},
+      {avatar:"F",user:"fuma.layers",loc:"Jiyugaoka",bg:"#100e08",mainIcon:"🥾",outfit:"Fleece + heavy denim + boots",desc:"Fleece layer under a heavy denim jacket, baggy jeans, and chunky boots. Storm-proof and edgy.",tags:["#fleece","#baggydenim","#heavylayers"],likes:"1,899",comment:"the layers are giving"}
+    ]
+  },
+  4:{
+    f:[
+      {avatar:"E",user:"emi.spring",loc:"Yoyogi",bg:"#14080e",mainIcon:"🌸",outfit:"Floral midi + white sneakers",desc:"Floral midi dress with clean white sneakers — soft, fresh, and effortlessly spring.",tags:["#floraldress","#springlook","#softgirl"],likes:"4,780",comment:"the floral midi is everything 🌸"},
+      {avatar:"W",user:"waka.casual",loc:"Koenji",bg:"#081010",mainIcon:"👟",outfit:"Striped tee + tailored trousers",desc:"Stripe tee tucked into high-waist tailored trousers. Parisian energy, Tokyo setting.",tags:["#stripes","#tailored","#parisian"],likes:"3,120",comment:"so effortlessly cool"}
+    ],
+    m:[
+      {avatar:"H",user:"hiro.mellow",loc:"Yoyogi Park",bg:"#08100e",mainIcon:"🌸",outfit:"Pastel shirt + light trousers",desc:"Soft pastel button-down open over a white tee, paired with light trousers. Spring-ready.",tags:["#pastelmen","#springfit","#openbutton"],likes:"2,670",comment:"pastel shirt is a vibe"},
+      {avatar:"N",user:"nori.street",loc:"Koenji",bg:"#100c08",mainIcon:"👟",outfit:"Knit polo + wide jeans",desc:"Knit polo in earthy tones with relaxed wide-leg jeans and leather sneakers. Effortless.",tags:["#knitpolo","#widefitjeans","#menstreet"],likes:"2,340",comment:"knit polo + wide jeans is the combo"}
+    ]
+  }
+};
+
+let curDay = 0;
+let curGender = 'f';
+
+function setDay(i, el) {
+  curDay = i;
+  document.querySelectorAll('.fc-day').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  const m = DAYS_META[i];
+  document.getElementById('bigTemp').textContent = m.temp;
+  document.getElementById('weatherDesc').textContent = m.label;
+  document.querySelector('.wstat:nth-child(1)').innerHTML = `<i class="ti ti-droplet"></i> ${m.humidity}`;
+  document.querySelector('.wstat:nth-child(2)').innerHTML = `<i class="ti ti-wind"></i> ${m.wind}`;
+  document.querySelector('.wstat:nth-child(3)').innerHTML = `<i class="ti ti-sun"></i> ${m.uv}`;
+  renderFeed();
+}
+
+function switchGender(g) {
+  curGender = g;
+  const tabF = document.getElementById('tab-f');
+  const tabM = document.getElementById('tab-m');
+  tabF.className = 'gtab' + (g === 'f' ? ' active-f' : '');
+  tabM.className = 'gtab' + (g === 'm' ? ' active-m' : '');
+  renderFeed();
+}
+
+function renderFeed() {
+  const posts = POSTS[curDay][curGender];
+  const meta = DAYS_META[curDay];
+  const isF = curGender === 'f';
+  const feedGrid = document.getElementById('feedGrid');
+  feedGrid.innerHTML = posts.map((p, idx) => `
+    <div class="post-card" style="animation-delay:${idx * 0.08}s">
+      <div class="pc-header">
+        <div class="pc-avatar" style="background:${isF ? '#2a1535' : '#0c2020'};color:${isF ? '#c9a0dc' : '#7ec8c8'}">${p.avatar}</div>
+        <div><div class="pc-user">${p.user}</div><div class="pc-loc">${p.loc}</div></div>
+        <i class="ti ti-dots pc-more" aria-hidden="true"></i>
+      </div>
+      <div class="pc-image" style="background:${p.bg}">
+        <span style="font-size:76px">${p.mainIcon}</span>
+        <div class="pc-badge">${meta.icon} ${meta.label}</div>
+        <div class="pc-temp-label">${meta.temp}C</div>
+      </div>
+      <div class="pc-actions">
+        <i class="ti ti-heart" aria-hidden="true"></i>
+        <i class="ti ti-message-circle" aria-hidden="true"></i>
+        <i class="ti ti-send" aria-hidden="true"></i>
+        <i class="ti ti-bookmark pc-save" aria-hidden="true"></i>
+      </div>
+      <div class="pc-likes">${p.likes} likes</div>
+      <div class="pc-caption"><strong>${p.user}</strong> ${p.outfit} — ${p.desc}</div>
+      <div class="pc-tags">${p.tags.map(t => `<span class="ptag ${isF ? 'ptag-f' : 'ptag-m'}">${t}</span>`).join('')}</div>
+      <div class="pc-comment">${p.comment}</div>
+    </div>
+  `).join('');
+  document.getElementById('feedTitle').textContent = `${meta.name}'s looks — ${meta.label}`;
+}
+
+function handleSearch() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (city) {
+    document.getElementById('cityName').textContent = city;
+    document.getElementById('cityInput').value = '';
+  }
+}
+document.getElementById('cityInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(); });
+
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const now = new Date();
+document.getElementById('dateStr').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+
+renderFeed();
+</script>
+</body>
+</html>
